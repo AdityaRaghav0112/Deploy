@@ -9,11 +9,7 @@ import {
   IconTerminal2,
 } from "@tabler/icons-react";
 
-import Dock from './Dock'
-import { div } from "motion/react-client";
-
-const page = () => {
-
+const Dock = () => {
   const links = [
     {
       title: "Home",
@@ -22,7 +18,7 @@ const page = () => {
       ),
       href: "#",
     },
- 
+
     {
       title: "Products",
       icon: (
@@ -56,7 +52,7 @@ const page = () => {
       ),
       href: "#",
     },
- 
+
     {
       title: "Twitter",
       icon: (
@@ -72,13 +68,14 @@ const page = () => {
       href: "#",
     },
   ];
-
-
   return (
-    <div className="h-screen bg-green-300">
-      This is main page once again
+    <div className="flex items-center justify-center h-40 w-full dark absolute bottom-0">
+      <FloatingDock
+        mobileClassName="translate-y-20" // only for demo, remove for production
+        items={links}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default Dock;

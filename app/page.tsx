@@ -8,11 +8,11 @@ const page = () => {
 
   return (
 
-    <div>
-      <h1>
-        lskaflsaml
-      </h1>
-      <Elements/>
+    <div className='grid grid-cols-4 place-items-stretch'>
+      <div className="item1 col-span-2"></div>
+      <div className="model col-span-2">
+        <Elements/>
+      </div>
     </div>
   )
 }

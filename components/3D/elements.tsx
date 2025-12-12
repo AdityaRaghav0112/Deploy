@@ -23,7 +23,7 @@ export default function Elements() {
     let mixer: THREE.AnimationMixer | null = null;
 
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    camera.position.set(0, 3, 45);
+    camera.position.set(0, 3, 65);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);

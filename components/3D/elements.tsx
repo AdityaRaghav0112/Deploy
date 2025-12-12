@@ -18,25 +18,30 @@ export default function Elements() {
     let width = mountRef.current.clientWidth;
     let height = mountRef.current.clientHeight;
 
+    // Scene
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color("#b7e2ff"); // Sketchfab sky blue
 
-    let mixer: THREE.AnimationMixer | null = null;
-
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    camera.position.set(0, 3, 65);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+
+    // Soft, pastel tone like Sketchfab
+    renderer.toneMapping = THREE.LinearToneMapping;
+    renderer.toneMappingExposure = 1.35;
 
     mountRef.current.appendChild(renderer.domElement);
 
+    // Camera
+    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+    camera.position.set(0, 3, 65);
+
     // Load Model
+    let mixer: THREE.AnimationMixer | null = null;
+
     const loader = new GLTFLoader();
     loader.load("/models/scene.gltf", (gltf) => {
       const model = gltf.scene;
@@ -60,28 +65,50 @@ export default function Elements() {
 
       scene.add(model);
 
+      // Animations
       mixer = new THREE.AnimationMixer(model);
       if (gltf.animations.length > 0) {
         mixer.clipAction(gltf.animations[0]).play();
       }
     });
 
-    // Lighting
-    scene.add(new THREE.HemisphereLight("#d8ecff", "#ffe6c7", 1.2));
+    // ⭐ Background
+    scene.background = new THREE.Color("#b7e2ff");
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    keyLight.position.set(10, 20, -10);
-    keyLight.castShadow = true;
-    scene.add(keyLight);
+    // 🌤 Hemisphere Light (soft ambient)
+    const hemiLight = new THREE.HemisphereLight("#cfe8ff", "#9bb3c8", 1.3);
+    scene.add(hemiLight);
 
-    scene.add(new THREE.DirectionalLight(0xffd8b1, 0.8));
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    // ☀ Directional Sun Light (low angle for visible shadows)
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.65);
+    sunLight.position.set(-15, 8, 12); // lower angle → visible front shadows
+    sunLight.castShadow = true;
+
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.bias = -0.0001;
+    sunLight.shadow.normalBias = 0.15; // ❤️ makes shadows actually appear
+    sunLight.shadow.radius = 4;
+
+    scene.add(sunLight);
+
+    // 💡 Soft ambient fill
+    const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambient);
+
+    // 🔆 subtle cool environment light 
+    const envLight = new THREE.AmbientLight("#ff9f5e", 0.35);
+    scene.add(envLight);
+
+    // 🎨 Tone mapping
+    renderer.toneMapping = THREE.LinearToneMapping;
+    renderer.toneMappingExposure = 1.15;
 
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    // Mouse Move
+    // Mouse Move Interactivity
     const handleMouseMove = (e: MouseEvent) => {
       mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
       mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -91,9 +118,10 @@ export default function Elements() {
     // Render Loop
     gsap.ticker.add((_, dt) => {
       const delta = dt / 1000;
+
       if (mixer) mixer.update(delta);
 
-      // 🔥 MODEL REACTS TO MOUSE — THIS RUNS EVERY FRAME
+      // Smooth rotation based on mouse
       if (modelRef) {
         gsap.to(modelRef.rotation, {
           x: 0.25 + mouse.y * 0.1,
@@ -110,6 +138,7 @@ export default function Elements() {
     // Resize
     const handleResize = () => {
       if (!mountRef.current) return;
+
       width = mountRef.current.clientWidth;
       height = mountRef.current.clientHeight;
 
@@ -120,6 +149,7 @@ export default function Elements() {
 
     window.addEventListener("resize", handleResize);
 
+    // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
